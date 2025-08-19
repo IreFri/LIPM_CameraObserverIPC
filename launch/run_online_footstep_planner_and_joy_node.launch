@@ -1,0 +1,16 @@
+<launch>
+
+<!-- input converter -->
+<arg name="verbose" default="false" />
+
+<!-- PS4 controller -->
+<node name="joy_node" pkg="joy" type="joy_node" >
+    <remap from="joy" to="/avatar/joy" />
+</node>
+
+<!-- footstep planner -->
+<include file="$(find online_footstep_planner)/launch/planner.launch">
+    <arg name="robot" value="hrp4cr" />
+</include>
+
+</launch>

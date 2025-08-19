@@ -1,0 +1,25 @@
+#planner: "@DEFAULT_EXTERNAL_PLANNER@"
+planner: "HybridPlanner"
+category: ["Walking", "Main", "External Planning"]
+
+# XXX ANA this should be set this way, but it is ignored for the HybridPlanner for now
+#default_target_type: "PS4 Controller"
+#default_target_type: "Oculus Controller"
+
+velocity_target:
+  planning_distance: [0.15, 0.15, 1.57]
+
+# Default configuration for the Hybrid Planner
+# None, this is overriden in the controller's FSM
+HybridPlanner: {}
+
+# Configuration for the OnlineFootstepPlanner
+OnlineFootstepPlanner:
+  rate: 30
+  verbose: true
+  # Skipped requests are to be expected given that the planner currently has no way to cancel the current requests computation
+  # In practice this happens:
+  # - When sending multiple requests in a row by moving the GUI target
+  # - When sending multiple requests through continuous joystick use
+  # In this case the latest request will be picked up once the previous requested plan has completed, and all other requests in between will be ignored.
+  ignore_skipped_requests: true
