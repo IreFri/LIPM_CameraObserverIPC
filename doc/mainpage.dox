@@ -1,0 +1,23 @@
+namespace lipm_walking {
+
+/** \mainpage notitle
+
+<img src="https://scaron.info/images/stair-climbing-doxygen.jpg" align="left">
+<div style="clear: both"></div>
+
+Welcome to the documentation for the [lipm_walking_controller](https://github.com/jrl-umi3218/lipm_walking_controller) version \controllerversion.
+
+The easiest way to get started with the controller is to use its \ref docker "Docker image":
+
+\code
+xhost +local:docker
+docker run -it --rm --user ayumi -e DISPLAY=${DISPLAY} -v /tmp/.X11-unix:/tmp/.X11-unix:rw stephanecaron/lipm_walking_controller lipm_walking --floor
+\endcode
+
+Alternatively, you can follow the instructions to \ref build "build from source".
+
+Learn how the code is organized on the \ref overview "code overview" page.
+
+*/
+
+}

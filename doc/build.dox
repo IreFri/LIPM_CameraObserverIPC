@@ -1,0 +1,213 @@
+namespace lipm_walking {
+
+/** \page build Build and install the LIPMWalking controller
+
+In what follows, we assume we are starting from a fresh and up-to-date Ubuntu LTS system.
+
+\section controller Building the controller
+
+You first need to install all required dependencies either from our \ref binaries "Ubuntu mirrors" or from \ref source "source".
+
+Assuming all dependencies are installed, we can install the lipm_walking_controller:
+
+\code
+git clone --recursive https://github.com/jrl-umi3218/lipm_walking_controller/ ~/devel/src/lipm_walking_controller
+mkdir -p ~/devel/src/lipm_walking_controller/build
+cd ~/devel/src/lipm_walking_controller/build
+cmake ../ -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+\section jvrc Simulation with the JVRC-1 model
+
+First edit mc_rtc configuration to make use of the newly installed controller, edit ~/.config/mc_rtc/mc_rtc.yaml:
+
+\code
+MainRobot: JVRC1
+Enabled: LIPMWalking
+\endcode
+
+Then start the RViZ GUI:
+
+\code
+roslaunch mc_rtc_ticker display.launch
+\endcode
+
+You can keep RViZ running between simulations.
+
+Go the project folder for JVRC1:
+
+\code
+cd /usr/share/hrpsys/samples/JVRC1
+\endcode
+
+Restart the CORBA nameserver:
+
+\code
+./clear-omninames.sh
+[ ok ] Stopping omniorb4-nameserver (via systemctl): omniorb4-nameserver.servic.
+[ ok ] Starting omniorb4-nameserver (via systemctl): omniorb4-nameserver.service.
+omniNames: (0) 2020-01-03 13:40:04.745670: Data file: '/var/lib/omniorb/omninames-tstation.dat'.
+omniNames: (0) 2020-01-03 13:40:04.745771: Starting omniNames for the first time.
+omniNames: (0) 2020-01-03 13:40:04.745877: Wrote initial data file '/var/lib/omniorb/omninames-tstation.dat'.
+omniNames: (0) 2020-01-03 13:40:04.745909: Read data file '/var/lib/omniorb/omninames-tstation.dat' successfully.
+omniNames: (0) 2020-01-03 13:40:04.745935: Root context is IOR:010000002b00000049444c3a6f6d672e6f72672f436f734e616d696e672f4e616d696e67436f6e746578744578743a312e300000010000000000000070000000010102000b00000031302e312e37362e37310000f90a00000b0000004e616d6553657276696365000300000000000000080000000100000000545441010000001c000000010000000100010001000000010001050901010001000000090101000354544108000000b4d30e5e010033dc
+omniNames: (0) 2020-01-03 13:40:04.745954: Checkpointing Phase 1: Prepare.
+omniNames: (0) 2020-01-03 13:40:04.745986: Checkpointing Phase 2: Commit.
+omniNames: (0) 2020-01-03 13:40:04.746015: Checkpointing completed.
+\endcode
+
+The output should look similar to the one above. If you see any errors then try again.
+
+You should now be able to run the simulation by (note that you need to be in that specific folder for the Choreonoid simulation to start successfully):
+
+\code
+choreonoid --start-simulation sim_mc.cnoid
+\endcode
+
+If everything worked well you should get something like this:
+
+<img src="https://user-images.githubusercontent.com/1189580/69481155-04de3500-0e52-11ea-91cc-02d05d504ffa.png" style="max-height: 42em" align="left">
+<div style="clear: both"></div>
+
+\section binaries Install dependencies from Ubuntu mirror
+
+Assuming you have already [installed ROS](https://wiki.ros.org/Installation/Ubuntu):
+
+\code
+# Make sure you have required tools
+sudo apt-get -qq install apt-transport-https lsb-release ca-certificates gnupg
+# Add our key
+sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key 892EA6EE273707C6495A6FB6220D644C64666806
+# Add our repository (head versions)
+sudo sh -c 'echo "deb https://dl.bintray.com/gergondet/multi-contact-head $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/multi-contact.list'
+# Update packages list
+sudo apt-get -qq update
+# Install required dependencies, Choreonoid, JVRC1 sample project and mc_rtc tools
+sudo apt install libeigen3-dev doxygen libboost-all-dev libmc-rtc-dev libcopra-dev mc-openrtm jvrc-choreonoid mc-rtc-utils ros-${ROS_DISTRO}-mc-rtc-tools
+\endcode
+
+You can now \ref controller "build the controller" and \ref jvrc "run a simulation".
+
+\section source Install dependencies from source
+
+\subsection jrl JRL dependencies
+
+Suppose  we keep source software repositories in ``~/devel/src``. We first clone mc_rtc and run its build script to get started:
+
+\code
+git clone --recursive https://github.com/jrl-umi3218/mc_rtc ~/devel/src/mc_rtc
+cd ~/devel/src/mc_rtc/utils
+./build_and_install.sh
+\endcode
+
+This script will take care of building mc_rtc, its dependencies and the ROS tools required to enjoy the full functionalities of the controller.
+
+We also have to build:
+- [eigen-quadprog](https://github.com/jrl-umi3218/eigen-quadprog/): quadratic programming
+- [copra](https://github.com/jrl-umi3218/copra/): linear model predictive control
+
+For eigen-quadprog:
+
+\code
+git clone --recursive https://github.com/jrl-umi3218/eigen-quadprog ~/devel/src/eigen-quadprog
+mkdir -p ~/devel/src/eigen-quadprog/build
+cd ~/devel/src/eigen-quadprog/build
+cmake ../ -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+And then copra:
+
+\code
+git clone --recursive https://github.com/jrl-umi3218/copra ~/devel/src/copra
+mkdir -p ~/devel/src/copra/build
+cd ~/devel/src/copra/build
+cmake ../ -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+\subsection choreonoid_build Building Choreonoid
+
+You can test the controller in simulation using Choreonoid and the AIST dynamics simulator. First, install the following packages:
+
+\code
+sudo apt-get install -y f2c gettext liblapack-dev libomniorb4-dev libyaml-dev omniidl omniidl-python software-properties-common
+\endcode
+
+Install OpenRTM-aist 1.1.2 packages (manually distributed...):
+
+\code
+wget https://github.com/OpenRTM/OpenRTM-aist/releases/download/svn/RELEASE_1_1_2/OpenRTM-aist_1.1.2_ubuntu`lsb_release -rs`_amd64_package.tar.gz
+tar xvzf OpenRTM-aist_1.1.2_ubuntu`lsb_release -rs`_amd64_package.tar.gz
+cd OpenRTM-aist_1.1.2_ubuntu`lsb_release -rs`_amd64_package
+sudo dpkg -i *.deb
+\endcode
+
+\code
+wget https://github.com/OpenRTM/OpenRTM-aist-Python/releases/download/svn%252FRELEASE_1_1_2/OpenRTM-aist-Python_1.1.2_ubuntu`lsb_release -rs`_amd64_package.tar.gz
+tar zxvf OpenRTM-aist-Python_1.1.2_ubuntu`lsb_release -rs`_amd64_package.tar.gz
+cd OpenRTM-aist-Python_1.1.2_ubuntu`lsb_release -rs`_amd64_package
+sudo dpkg -i *.deb
+\endcode
+
+Install the [OpenHRP3](https://github.com/fkanehiro/openhrp3) library:
+
+\code
+git clone --recursive https://github.com/fkanehiro/openhrp3.git ~/devel/src/openhrp3
+mkdir -p ~/devel/src/openhrp3/build
+cd ~/devel/src/openhrp3/util
+./installPackages.sh packages.list.ubuntu.`lsb_release -rs`
+cd ../build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+Install the [hrpsys-base](https://github.com/fkanehiro/hrpsys-base) suite of OpenRTM components:
+
+\code
+git clone --recursive https://github.com/fkanehiro/hrpsys-base.git ~/devel/src/hrpsys-base
+mkdir -p ~/devel/src/hrpsys-base/build
+cd ~/devel/src/hrpsys-base/build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+Install [Choreonoid](https://github.com/s-nakaoka/choreonoid):
+
+\code
+git clone --recursive https://github.com/s-nakaoka/choreonoid.git ~/devel/src/choreonoid
+mkdir -p ~/devel/src/choreonoid/build
+cd ~/devel/src/choreonoid/build
+cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+\subsection mc_openrtm Install mc_openrtm and the sample project
+
+We will need an interface to communicate with our simulated robots. Install the following:
+
+- [mc_openrtm](https://github.com/jrl-umi3218/mc_openrtm): OpenRTM interface to connect mc_rtc with the Choreonoid simulation
+
+\code
+git clone --recursive https://github.com/jrl-umi3218/mc_openrtm ~/devel/src/mc_openrtm
+mkdir -p ~/devel/src/mc_openrtm/build
+cd ~/devel/src/mc_openrtm/build
+cmake ../ -DCMAKE_BUILD_TYPE=RelWithDebInfo
+make -j`nproc`
+sudo make install
+\endcode
+
+This will install the interface along with a sample project for the JVRC1 robot.
+
+You can now \ref controller "build the controller" and \ref jvrc "run a simulation".
+
+*/
+
+}
